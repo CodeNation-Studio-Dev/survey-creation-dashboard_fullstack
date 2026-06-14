@@ -18,19 +18,19 @@ export default async function SurveySubmittedPage({
       <section className="glass-panel w-full rounded-[2.4rem] px-6 py-10 text-center md:px-10 md:py-14">
         <CheckCircle2 className="mx-auto size-16 text-[var(--accent-cool)]" />
         <h1 className="display-font mt-6 text-4xl font-semibold tracking-tight md:text-5xl">
-          Thanks for sharing your feedback.
+          Gracias por compartir tu opinion.
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[color:rgba(18,33,23,0.7)] md:text-lg">
           {survey
-            ? `Your response for ${survey.title} was recorded anonymously.`
-            : "Your response was recorded anonymously."}
+            ? `Tu respuesta para ${survey.title} fue registrada de forma anonima.`
+            : "Tu respuesta fue registrada de forma anonima."}
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/" className="rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white">
-            Return home
+            Volver al inicio
           </Link>
           <Link href="/admin" className="rounded-full border border-[var(--line)] bg-white/62 px-5 py-3 text-sm font-semibold">
-            Open admin dashboard
+            Abrir panel de administracion
           </Link>
         </div>
       </section>

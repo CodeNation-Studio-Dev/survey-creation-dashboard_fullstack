@@ -7,6 +7,18 @@ import { getSurveyBySlug } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+function getQuestionTypeLabel(type: "single_choice" | "rating" | "text") {
+  if (type === "single_choice") {
+    return "Opcion unica";
+  }
+
+  if (type === "rating") {
+    return "Calificacion";
+  }
+
+  return "Pregunta abierta";
+}
+
 export default async function SurveyPage({
   params,
 }: {
@@ -24,14 +36,14 @@ export default async function SurveyPage({
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/62 px-4 py-2 text-sm font-medium">
           <ArrowLeft className="size-4" />
-          Back to survey hub
+          Volver al portal de encuestas
         </Link>
       </div>
 
       <section className="glass-panel rounded-[2.3rem] px-6 py-8 md:px-10 md:py-12">
         <div className="max-w-3xl space-y-5">
           <span className="pill inline-flex w-fit rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-deep)]">
-            Anonymous survey
+            Encuesta anonima
           </span>
           <h1 className="display-font text-4xl font-semibold tracking-tight md:text-5xl">{survey.title}</h1>
           <p className="text-base leading-8 text-[color:rgba(18,33,23,0.72)] md:text-lg">{survey.description}</p>
@@ -44,14 +56,14 @@ export default async function SurveyPage({
             <section key={question.id} className="rounded-[1.8rem] border border-[var(--line)] bg-white/72 p-5 md:p-6">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                  Question {index + 1}
+                  Pregunta {index + 1}
                 </span>
                 <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-cool)]">
-                  {question.type.replace("_", " ")}
+                  {getQuestionTypeLabel(question.type)}
                 </span>
                 {question.required ? (
                   <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-deep)]">
-                    Required
+                    Obligatoria
                   </span>
                 ) : null}
               </div>
@@ -59,12 +71,15 @@ export default async function SurveyPage({
               <h2 className="mt-4 text-2xl font-semibold tracking-tight">{question.prompt}</h2>
 
               {question.type === "text" ? (
-                <textarea
-                  name={`question_${question.id}`}
-                  required={question.required}
-                  className="field mt-4 min-h-32"
-                  placeholder="Share your answer"
-                />
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm text-[color:rgba(18,33,23,0.65)]">Respuesta abierta</p>
+                  <textarea
+                    name={`question_${question.id}`}
+                    required={question.required}
+                    className="field min-h-32"
+                    placeholder="Comparte tu respuesta"
+                  />
+                </div>
               ) : null}
 
               {question.type === "single_choice" ? (
@@ -111,13 +126,13 @@ export default async function SurveyPage({
 
           <div className="flex flex-col gap-3 border-t border-[var(--line)] pt-6 md:flex-row md:items-center md:justify-between">
             <p className="max-w-xl text-sm leading-7 text-[color:rgba(18,33,23,0.68)]">
-              Your response is recorded anonymously. No account or identifying details are required.
+              Tu respuesta se registra de forma anonima. No se requiere cuenta ni datos identificables.
             </p>
             <button
               type="submit"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
             >
-              Submit response
+              Enviar respuesta
               <Send className="size-4" />
             </button>
           </div>

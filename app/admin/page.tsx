@@ -16,7 +16,7 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
         <div className="flex items-center justify-between gap-3">
           <h4 className="text-lg font-semibold">{result.prompt}</h4>
           <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-            {result.totalAnswers} text replies
+            {result.totalAnswers} respuestas de texto
           </span>
         </div>
         <div className="mt-4 grid gap-3">
@@ -30,7 +30,7 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
               </blockquote>
             ))
           ) : (
-            <p className="text-sm text-[color:rgba(18,33,23,0.64)]">No written responses yet.</p>
+            <p className="text-sm text-[color:rgba(18,33,23,0.64)]">Todavia no hay respuestas escritas.</p>
           )}
         </div>
       </div>
@@ -42,7 +42,7 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
       <div className="flex items-center justify-between gap-3">
         <h4 className="text-lg font-semibold">{result.prompt}</h4>
         <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-          {result.totalAnswers} answers
+          {result.totalAnswers} respuestas
         </span>
       </div>
       <div className="mt-5 space-y-4">
@@ -81,30 +81,30 @@ export default async function AdminPage() {
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div className="space-y-5">
             <span className="pill inline-flex w-fit rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-deep)]">
-              Admin console
+              Consola de administracion
             </span>
             <h1 className="display-font max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-              Publish surveys, monitor answers, and share anonymous response links.
+              Publica encuestas, monitorea respuestas y comparte enlaces anonimos.
             </h1>
             <p className="max-w-2xl text-base leading-8 text-[color:rgba(18,33,23,0.72)] md:text-lg">
-              Survey Studio keeps the workflow tight: define questions, copy the share link, and track what people are saying from one place.
+              Survey Studio centraliza el flujo: define preguntas, copia el enlace y analiza lo que dice la gente en un solo lugar.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
             <div className="rounded-[1.75rem] border border-[var(--line)] bg-white/70 p-5">
               <Users className="size-5 text-[var(--accent)]" />
               <p className="mt-4 text-3xl font-semibold">{surveys.reduce((sum, survey) => sum + survey.responseCount, 0)}</p>
-              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Total anonymous responses</p>
+              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Total de respuestas anonimas</p>
             </div>
             <div className="rounded-[1.75rem] border border-[var(--line)] bg-white/70 p-5">
               <BarChart3 className="size-5 text-[var(--accent-cool)]" />
               <p className="mt-4 text-3xl font-semibold">{surveys.length}</p>
-              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Surveys in the workspace</p>
+              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Encuestas en el espacio de trabajo</p>
             </div>
             <div className="rounded-[1.75rem] border border-[var(--line)] bg-white/70 p-5">
               <ShieldCheck className="size-5 text-[var(--foreground)]" />
-              <p className="mt-4 text-3xl font-semibold">Anon</p>
-              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Public links, no sign-in required</p>
+              <p className="mt-4 text-3xl font-semibold">Anonimo</p>
+              <p className="mt-2 text-sm text-[color:rgba(18,33,23,0.68)]">Enlaces publicos, sin inicio de sesion</p>
             </div>
           </div>
         </div>
@@ -112,9 +112,9 @@ export default async function AdminPage() {
 
       {!databaseConfigured ? (
         <section className="glass-panel mt-8 rounded-[2rem] border border-[var(--line)] p-6 md:p-8">
-          <h2 className="display-font text-2xl font-semibold">Database setup needed</h2>
+          <h2 className="display-font text-2xl font-semibold">Se requiere configurar la base de datos</h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:rgba(18,33,23,0.72)] md:text-base">
-            Add a Neon connection string in the DATABASE_URL environment variable before creating surveys. The schema is created automatically on first use.
+            Agrega la cadena de conexion de Neon en la variable DATABASE_URL antes de crear encuestas. El esquema se crea automaticamente en el primer uso.
           </p>
           <pre className="mt-4 overflow-x-auto rounded-[1.5rem] border border-[var(--line)] bg-[rgba(18,33,23,0.04)] p-4 text-sm">
 DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
@@ -129,21 +129,21 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
       <section className="mt-8 space-y-5">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="display-font text-3xl font-semibold tracking-tight">Published surveys</h2>
+            <h2 className="display-font text-3xl font-semibold tracking-tight">Encuestas publicadas</h2>
             <p className="mt-2 text-sm leading-7 text-[color:rgba(18,33,23,0.68)] md:text-base">
-              Every survey gets an anonymous share link and a live result view.
+              Cada encuesta obtiene un enlace anonimo para compartir y una vista de resultados en vivo.
             </p>
           </div>
           <Link href="/" className="rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium">
-            View public hub
+            Ver portal publico
           </Link>
         </div>
 
         {surveys.length === 0 ? (
           <div className="glass-panel rounded-[2rem] border border-dashed border-[var(--line)] p-10 text-center">
-            <h3 className="display-font text-2xl font-semibold">No surveys yet</h3>
+            <h3 className="display-font text-2xl font-semibold">Aun no hay encuestas</h3>
             <p className="mt-3 text-sm leading-7 text-[color:rgba(18,33,23,0.68)] md:text-base">
-              Build your first survey above and a shareable public link will appear here.
+              Crea tu primera encuesta arriba y aqui aparecera un enlace publico para compartir.
             </p>
           </div>
         ) : (
@@ -154,7 +154,7 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="display-font text-3xl font-semibold tracking-tight">{survey.title}</h3>
                     <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                      {survey.isActive ? "Live" : "Draft"}
+                      {survey.isActive ? "Activa" : "Borrador"}
                     </span>
                   </div>
                   <p className="max-w-3xl text-sm leading-7 text-[color:rgba(18,33,23,0.7)] md:text-base">
@@ -163,15 +163,15 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3 md:min-w-[330px]">
                   <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-deep)]">Questions</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-deep)]">Preguntas</p>
                     <p className="mt-2 text-2xl font-semibold">{survey.questionCount}</p>
                   </div>
                   <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-cool)]">Responses</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-cool)]">Respuestas</p>
                     <p className="mt-2 text-2xl font-semibold">{survey.responseCount}</p>
                   </div>
                   <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)]">Share</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)]">Compartir</p>
                     <Link href={`/s/${survey.slug}`} className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
                       <Link2 className="size-4" />
                       /s/{survey.slug}

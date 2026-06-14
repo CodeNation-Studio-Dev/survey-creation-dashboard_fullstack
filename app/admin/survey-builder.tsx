@@ -15,31 +15,38 @@ function SubmitButton() {
       disabled={pending}
       className="inline-flex items-center justify-center rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Publishing survey..." : "Publish survey"}
+      {pending ? "Publicando encuesta..." : "Publicar encuesta"}
     </button>
   );
 }
 
 const questionTypes: Array<{ value: QuestionType; label: string }> = [
-  { value: "single_choice", label: "Single choice" },
-  { value: "rating", label: "1-5 rating" },
-  { value: "text", label: "Open text" },
+  { value: "single_choice", label: "Opcion unica" },
+  { value: "rating", label: "Calificacion 1-5" },
+  { value: "text", label: "Texto abierto" },
 ];
 
 const initialQuestions: Array<SurveyDraftQuestion & { id: string }> = [
   {
     id: "question-1",
-    prompt: "How satisfied are you with the onboarding experience?",
+    prompt: "Que tan satisfecho/a estas con la experiencia de incorporacion?",
     type: "rating",
     required: true,
     options: [],
   },
   {
     id: "question-2",
-    prompt: "Which part of the product needs the most attention next?",
+    prompt: "Que parte del producto necesita mas atencion ahora?",
     type: "single_choice",
     required: true,
-    options: ["Performance", "Design", "Documentation"],
+    options: ["Rendimiento", "Diseno", "Documentacion"],
+  },
+  {
+    id: "question-3",
+    prompt: "Que sugerencia concreta nos darias para mejorar?",
+    type: "text",
+    required: false,
+    options: [],
   },
 ];
 
@@ -49,7 +56,7 @@ export function SurveyBuilder({
   action: (formData: FormData) => Promise<void>;
 }) {
   const [questions, setQuestions] = useState(initialQuestions);
-  const [nextId, setNextId] = useState(3);
+  const [nextId, setNextId] = useState(4);
 
   const payload = JSON.stringify(
     questions.map((question) => ({
@@ -89,13 +96,13 @@ export function SurveyBuilder({
         <div className="space-y-2">
           <span className="pill inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent-deep)]">
             <Sparkles className="size-3.5" />
-            Survey builder
+            Constructor de encuestas
           </span>
           <h2 className="display-font text-3xl font-semibold tracking-tight md:text-4xl">
-            Design questions for anonymous feedback.
+            Disena preguntas para feedback anonimo.
           </h2>
           <p className="max-w-2xl text-sm leading-7 text-[color:rgba(18,33,23,0.72)] md:text-base">
-            Create a survey, publish a shareable link, and start collecting responses without asking people to sign in.
+            Crea una encuesta, publica un enlace para compartir y empieza a recolectar respuestas sin pedir inicio de sesion.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -105,7 +112,7 @@ export function SurveyBuilder({
             className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
           >
             <Plus className="size-4" />
-            Choice
+            Opcion
           </button>
           <button
             type="button"
@@ -113,7 +120,7 @@ export function SurveyBuilder({
             className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
           >
             <Plus className="size-4" />
-            Rating
+            Calificacion
           </button>
           <button
             type="button"
@@ -121,22 +128,22 @@ export function SurveyBuilder({
             className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
           >
             <Plus className="size-4" />
-            Text
+            Pregunta abierta
           </button>
         </div>
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-[1.1fr_0.9fr]">
         <label className="space-y-2">
-          <span className="text-sm font-semibold">Survey title</span>
-          <input name="title" className="field" placeholder="Quarterly Product Pulse" required minLength={3} />
+          <span className="text-sm font-semibold">Titulo de la encuesta</span>
+          <input name="title" className="field" placeholder="Pulso trimestral del producto" required minLength={3} />
         </label>
         <label className="space-y-2">
-          <span className="text-sm font-semibold">Publishing</span>
+          <span className="text-sm font-semibold">Publicacion</span>
           <span className="flex h-[58px] items-center justify-between rounded-[1.25rem] border border-[var(--line)] bg-white/65 px-4">
             <span>
-              <span className="block text-sm font-semibold">Accept anonymous responses</span>
-              <span className="block text-xs text-[color:rgba(18,33,23,0.6)]">Turn this off to keep the survey as a draft.</span>
+              <span className="block text-sm font-semibold">Aceptar respuestas anonimas</span>
+              <span className="block text-xs text-[color:rgba(18,33,23,0.6)]">Desactiva esto para dejar la encuesta como borrador.</span>
             </span>
             <input name="isActive" type="checkbox" defaultChecked className="size-5 accent-[var(--accent)]" />
           </span>
@@ -144,11 +151,11 @@ export function SurveyBuilder({
       </div>
 
       <label className="mt-5 block space-y-2">
-        <span className="text-sm font-semibold">What should respondents know?</span>
+        <span className="text-sm font-semibold">Que deben saber los participantes?</span>
         <textarea
           name="description"
           className="field min-h-28"
-          placeholder="Tell people why you are collecting responses and how long the survey will take."
+          placeholder="Explica por que recopilas respuestas y cuanto tiempo toma la encuesta."
           required
           minLength={12}
         />
@@ -162,10 +169,10 @@ export function SurveyBuilder({
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-cool)]">
-                  Question {index + 1}
+                  Pregunta {index + 1}
                 </p>
                 <p className="text-sm text-[color:rgba(18,33,23,0.64)]">
-                  Choose the input style and whether respondents must answer.
+                  Elige el tipo de entrada y si la respuesta sera obligatoria.
                 </p>
               </div>
               {questions.length > 1 ? (
@@ -175,23 +182,23 @@ export function SurveyBuilder({
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-medium text-[var(--accent-deep)]"
                 >
                   <Trash2 className="size-4" />
-                  Remove
+                  Eliminar
                 </button>
               ) : null}
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-[1.5fr_0.6fr_0.6fr]">
               <label className="space-y-2">
-                <span className="text-sm font-semibold">Prompt</span>
+                <span className="text-sm font-semibold">Enunciado</span>
                 <input
                   className="field"
                   value={question.prompt}
                   onChange={(event) => updateQuestion(question.id, { prompt: event.target.value })}
-                  placeholder="Ask a clear, specific question"
+                  placeholder="Escribe una pregunta clara y especifica"
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-semibold">Type</span>
+                <span className="text-sm font-semibold">Tipo</span>
                 <select
                   className="field"
                   value={question.type}
@@ -202,7 +209,7 @@ export function SurveyBuilder({
                         event.target.value === "single_choice"
                           ? question.options?.length
                             ? question.options
-                            : ["Option A", "Option B"]
+                            : ["Opcion A", "Opcion B"]
                           : [],
                     })
                   }
@@ -215,7 +222,7 @@ export function SurveyBuilder({
                 </select>
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-semibold">Required</span>
+                <span className="text-sm font-semibold">Obligatoria</span>
                 <span className="flex h-[58px] items-center justify-center rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface-strong)]">
                   <input
                     type="checkbox"
@@ -229,7 +236,7 @@ export function SurveyBuilder({
 
             {question.type === "single_choice" ? (
               <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold">Options</span>
+                <span className="text-sm font-semibold">Opciones</span>
                 <textarea
                   className="field min-h-28"
                   value={(question.options ?? []).join("\n")}
@@ -238,7 +245,7 @@ export function SurveyBuilder({
                       options: event.target.value.split("\n"),
                     })
                   }
-                  placeholder="One option per line"
+                  placeholder="Una opcion por linea"
                 />
               </label>
             ) : null}
@@ -248,7 +255,7 @@ export function SurveyBuilder({
 
       <div className="mt-8 flex flex-col gap-3 border-t border-[var(--line)] pt-6 md:flex-row md:items-center md:justify-between">
         <p className="max-w-xl text-sm leading-7 text-[color:rgba(18,33,23,0.68)]">
-          Links are anonymous by default. Share the survey URL from the dashboard after publishing and respondents can answer without authentication.
+          Los enlaces son anonimos por defecto. Comparte la URL desde el panel y las personas podran responder sin autenticarse.
         </p>
         <SubmitButton />
       </div>

@@ -9,7 +9,7 @@ import { getSurveyForSubmission } from "./data";
 
 const questionSchema = z
   .object({
-    prompt: z.string().trim().min(1, "Question prompt is required."),
+    prompt: z.string().trim().min(1, "El enunciado de la pregunta es obligatorio."),
     type: z.enum(["single_choice", "rating", "text"]),
     required: z.boolean().default(true),
     options: z.array(z.string().trim().min(1)).optional(),
@@ -18,17 +18,17 @@ const questionSchema = z
     if (question.type === "single_choice" && (!question.options || question.options.length < 2)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Single-choice questions need at least two options.",
+        message: "Las preguntas de opcion unica necesitan al menos dos opciones.",
         path: ["options"],
       });
     }
   });
 
 const createSurveySchema = z.object({
-  title: z.string().trim().min(3, "Survey title is required."),
-  description: z.string().trim().min(12, "Add a short description for respondents."),
+  title: z.string().trim().min(3, "El titulo de la encuesta es obligatorio."),
+  description: z.string().trim().min(12, "Agrega una descripcion breve para los participantes."),
   isActive: z.boolean(),
-  questions: z.array(questionSchema).min(1, "Add at least one question."),
+  questions: z.array(questionSchema).min(1, "Agrega al menos una pregunta."),
 });
 
 function slugify(value: string) {
@@ -76,13 +76,13 @@ export async function createSurveyAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Unable to create the survey.");
+    throw new Error(parsed.error.issues[0]?.message ?? "No se pudo crear la encuesta.");
   }
 
   const sql = await ensureSchema();
 
   if (!sql) {
-    throw new Error("Set DATABASE_URL before creating surveys.");
+    throw new Error("Configura DATABASE_URL antes de crear encuestas.");
   }
 
   const surveyId = crypto.randomUUID();
@@ -117,13 +117,13 @@ export async function submitSurveyResponseAction(formData: FormData) {
   const surveyId = formData.get("surveyId");
 
   if (typeof surveyId !== "string") {
-    throw new Error("Survey information is missing.");
+    throw new Error("Falta informacion de la encuesta.");
   }
 
   const survey = await getSurveyForSubmission(surveyId);
 
   if (!survey) {
-    throw new Error("This survey is no longer accepting responses.");
+    throw new Error("Esta encuesta ya no acepta respuestas.");
   }
 
   const answers = survey.questions.map((question) => {
@@ -131,18 +131,18 @@ export async function submitSurveyResponseAction(formData: FormData) {
     const value = typeof rawValue === "string" ? rawValue.trim() : "";
 
     if (question.required && !value) {
-      throw new Error("Please answer all required questions.");
+      throw new Error("Responde todas las preguntas obligatorias.");
     }
 
     if (question.type === "single_choice" && value && !question.options.includes(value)) {
-      throw new Error("One of the selected answers is invalid.");
+      throw new Error("Una de las respuestas seleccionadas no es valida.");
     }
 
     if (question.type === "rating" && value) {
       const rating = Number(value);
 
       if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-        throw new Error("Ratings must be between 1 and 5.");
+        throw new Error("La calificacion debe estar entre 1 y 5.");
       }
     }
 
@@ -155,7 +155,7 @@ export async function submitSurveyResponseAction(formData: FormData) {
   const sql = await ensureSchema();
 
   if (!sql) {
-    throw new Error("Set DATABASE_URL before collecting survey responses.");
+    throw new Error("Configura DATABASE_URL antes de recopilar respuestas.");
   }
 
   const responseId = crypto.randomUUID();

@@ -14,7 +14,7 @@ const displayFont = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Survey Studio",
-  description: "Create anonymous surveys, publish links, and review results from a polished admin dashboard.",
+  description: "Crea encuestas anonimas, comparte enlaces y analiza resultados desde un panel de administracion.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
