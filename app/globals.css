@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6efe3;
+  --foreground: #122117;
+  --surface: rgba(255, 251, 244, 0.74);
+  --surface-strong: rgba(255, 251, 244, 0.92);
+  --line: rgba(18, 33, 23, 0.12);
+  --accent: #f06f3c;
+  --accent-deep: #c94816;
+  --accent-cool: #167c72;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(240, 111, 60, 0.22), transparent 30%),
+    radial-gradient(circle at top right, rgba(22, 124, 114, 0.18), transparent 34%),
+    linear-gradient(180deg, #fff8ef 0%, #f6efe3 46%, #efe5d7 100%);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(240, 111, 60, 0.16), transparent 28%),
+    radial-gradient(circle at 80% 20%, rgba(22, 124, 114, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 248, 239, 0.88), rgba(246, 239, 227, 0.96));
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+::selection {
+  background: rgba(240, 111, 60, 0.28);
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 80px rgba(72, 49, 21, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(18, 33, 23, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 33, 23, 0.05) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+.display-font {
+  font-family: var(--font-display), sans-serif;
+}
+
+.field {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  padding: 0.95rem 1rem;
+  color: var(--foreground);
+}
+
+.field:focus {
+  outline: none;
+  border-color: rgba(240, 111, 60, 0.6);
+  box-shadow: 0 0 0 4px rgba(240, 111, 60, 0.12);
+}
+
+.pill {
+  border: 1px solid rgba(18, 33, 23, 0.14);
+  background: rgba(255, 255, 255, 0.5);
+}
