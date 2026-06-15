@@ -142,6 +142,39 @@ export async function loginWithPassword(email: string, password: string) {
   };
 }
 
+export async function changePasswordForUser(
+  userId: string,
+  currentPassword: string,
+  nextPassword: string,
+) {
+  const sql = await ensureSchema();
+
+  if (!sql) {
+    throw new Error("Configura DATABASE_URL antes de actualizar la contrasena.");
+  }
+
+  const rows = (await sql`
+    SELECT password_hash
+    FROM users
+    WHERE id = ${userId}
+    LIMIT 1
+  `) as Array<Record<string, unknown>>;
+
+  const storedHash = asText(rows[0]?.password_hash);
+
+  if (!storedHash || !verifyPassword(currentPassword, storedHash)) {
+    throw new Error("La contrasena actual no es valida.");
+  }
+
+  const nextPasswordHash = hashPassword(nextPassword);
+
+  await sql`
+    UPDATE users
+    SET password_hash = ${nextPasswordHash}
+    WHERE id = ${userId}
+  `;
+}
+
 export async function createUserSession(userId: string) {
   const sql = await ensureSchema();
 

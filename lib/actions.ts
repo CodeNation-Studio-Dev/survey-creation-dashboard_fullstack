@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import {
+  changePasswordForUser,
   clearUserSession,
   createUserSession,
   loginWithPassword,
@@ -42,6 +43,16 @@ const credentialsSchema = z.object({
   email: z.string().trim().email("Ingresa un correo valido."),
   password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
 });
+
+const resetPasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Ingresa tu contrasena actual."),
+    newPassword: z.string().min(8, "La nueva contrasena debe tener al menos 8 caracteres."),
+  })
+  .refine((value) => value.currentPassword !== value.newPassword, {
+    message: "La nueva contrasena debe ser diferente a la actual.",
+    path: ["newPassword"],
+  });
 
 function slugify(value: string) {
   const base = value
@@ -281,6 +292,27 @@ export async function loginAction(formData: FormData) {
 export async function logoutAction() {
   await clearUserSession();
   redirect("/");
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  const user = await requireUser();
+  const parsed = resetPasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+  });
+
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message ?? "No se pudo actualizar la contrasena.";
+    redirect(`/admin?passwordError=${encodeURIComponent(message)}`);
+  }
+
+  try {
+    await changePasswordForUser(user.id, parsed.data.currentPassword, parsed.data.newPassword);
+    redirect("/admin?passwordUpdated=1");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo actualizar la contrasena.";
+    redirect(`/admin?passwordError=${encodeURIComponent(message)}`);
+  }
 }
 
 export async function submitSurveyResponseAction(formData: FormData) {

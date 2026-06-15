@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BarChart3, Link2, LogOut, ShieldCheck, Users } from "lucide-react";
 
 import { SurveyBuilder } from "./survey-builder";
-import { createSurveyAction, logoutAction } from "@/lib/actions";
+import { createSurveyAction, logoutAction, resetPasswordAction } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
 import { getAdminSurveyAnalytics } from "@/lib/data";
 import { hasDatabaseConfig } from "@/lib/db";
@@ -77,7 +77,12 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
   );
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ passwordError?: string; passwordUpdated?: string }>;
+}) {
+  const params = await searchParams;
   const user = await requireUser();
 
   const [surveys, databaseConfigured] = await Promise.all([
@@ -148,6 +153,63 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
 
       <section className="mt-8">
         <SurveyBuilder action={createSurveyAction} />
+      </section>
+
+      <section className="glass-panel mt-8 rounded-[2rem] border border-[var(--line)] p-6 md:p-8">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr] lg:items-start">
+          <div>
+            <h2 className="display-font text-3xl font-semibold tracking-tight">Perfil de usuario</h2>
+            <p className="mt-3 text-sm leading-7 text-[color:rgba(18,33,23,0.7)] md:text-base">
+              Cambia tu contrasena ingresando primero la contrasena actual y luego la nueva.
+            </p>
+          </div>
+
+          <form action={resetPasswordAction} className="rounded-[1.4rem] border border-[var(--line)] bg-white/62 p-5">
+            <div className="space-y-4">
+              <label className="block space-y-2">
+                <span className="text-sm font-semibold">Contrasena actual</span>
+                <input
+                  name="currentPassword"
+                  type="password"
+                  className="field"
+                  placeholder="Tu contrasena actual"
+                  required
+                />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-semibold">Nueva contrasena</span>
+                <input
+                  name="newPassword"
+                  type="password"
+                  className="field"
+                  placeholder="Minimo 8 caracteres"
+                  required
+                  minLength={8}
+                />
+              </label>
+            </div>
+
+            {params.passwordError ? (
+              <p className="mt-4 rounded-xl border border-[var(--line)] bg-[rgba(201,72,22,0.08)] px-4 py-3 text-sm font-medium text-[var(--accent-deep)]">
+                {params.passwordError}
+              </p>
+            ) : null}
+
+            {params.passwordUpdated === "1" ? (
+              <p className="mt-4 rounded-xl border border-[var(--line)] bg-[rgba(36,138,84,0.12)] px-4 py-3 text-sm font-medium text-[color:rgba(22,94,60,1)]">
+                Contrasena actualizada correctamente.
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              className="mt-5 inline-flex items-center rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white"
+            >
+              Actualizar contrasena
+            </button>
+          </form>
+        </div>
       </section>
 
       <section className="mt-8 space-y-5">
