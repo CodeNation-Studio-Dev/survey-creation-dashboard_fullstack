@@ -285,11 +285,40 @@ export function SurveyBuilder({
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 border-t border-[var(--line)] pt-6 md:flex-row md:items-center md:justify-between">
-        <p className="max-w-xl text-sm leading-7 text-[color:rgba(18,33,23,0.68)]">
-          Los enlaces son anonimos por defecto. Comparte la URL desde el panel y las personas podran responder sin autenticarse.
-        </p>
-        <SubmitButton submitLabel={submitLabel ?? "Publicar encuesta"} />
+      <div className="mt-8 border-t border-[var(--line)] pt-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-xl text-sm leading-7 text-[color:rgba(18,33,23,0.68)]">
+            Los enlaces son anonimos por defecto. Comparte la URL desde el panel y las personas podran responder sin autenticarse.
+          </p>
+          <SubmitButton submitLabel={submitLabel ?? "Publicar encuesta"} />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => addQuestion("single_choice")}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
+          >
+            <Plus className="size-4" />
+            Agregar opcion unica
+          </button>
+          <button
+            type="button"
+            onClick={() => addQuestion("rating")}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
+          >
+            <Plus className="size-4" />
+            Agregar calificacion
+          </button>
+          <button
+            type="button"
+            onClick={() => addQuestion("text")}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/60 px-4 py-2 text-sm font-medium"
+          >
+            <Plus className="size-4" />
+            Agregar pregunta abierta
+          </button>
+        </div>
       </div>
     </form>
   );
