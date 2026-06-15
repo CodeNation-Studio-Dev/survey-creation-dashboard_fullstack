@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, Link2, Sparkles } from "lucide-react";
 
+import { getCurrentUser } from "@/lib/auth";
 import { listActiveSurveys } from "@/lib/data";
 import { hasDatabaseConfig } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [surveys, databaseConfigured] = await Promise.all([
+  const [surveys, databaseConfigured, user] = await Promise.all([
     listActiveSurveys(),
     Promise.resolve(hasDatabaseConfig()),
+    getCurrentUser(),
   ]);
 
   return (
@@ -29,10 +31,10 @@ export default async function Home() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/admin"
+                href={user ? "/admin" : "/auth"}
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white"
               >
-                Abrir administracion
+                {user ? "Abrir administracion" : "Iniciar sesion"}
                 <ArrowRight className="size-4" />
               </Link>
               <span className="rounded-full border border-[var(--line)] bg-white/62 px-5 py-3 text-sm font-medium">

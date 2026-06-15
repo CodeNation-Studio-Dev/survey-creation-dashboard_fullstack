@@ -93,6 +93,34 @@ async function listSurveySummaries(includeInactive: boolean) {
   return surveys ?? [];
 }
 
+  async function listOwnerSurveySummaries(userId: string) {
+    const surveys = await withDatabase(async (sql) => {
+      const rows = (await sql`
+        SELECT
+          surveys.id,
+          surveys.slug,
+          surveys.title,
+          surveys.description,
+          surveys.is_active,
+          surveys.created_at,
+          COUNT(DISTINCT survey_questions.id)::int AS question_count,
+          COUNT(DISTINCT survey_responses.id)::int AS response_count
+        FROM surveys
+        LEFT JOIN survey_questions
+          ON survey_questions.survey_id = surveys.id
+        LEFT JOIN survey_responses
+          ON survey_responses.survey_id = surveys.id
+        WHERE surveys.user_id = ${userId}
+        GROUP BY surveys.id
+        ORDER BY surveys.created_at DESC
+      `) as RecordValue[];
+
+      return rows.map(mapSummary);
+    });
+
+    return surveys ?? [];
+  }
+
 async function getSurveyQuestions(surveyId: string) {
   const questions = await withDatabase(async (sql) => {
     const rows = (await sql`
@@ -146,6 +174,45 @@ export async function getSurveyBySlug(slug: string): Promise<SurveyDetail | null
     questions: await getSurveyQuestions(summary.id),
   };
 }
+
+  export async function getSurveyByIdForOwner(
+    surveyId: string,
+    userId: string,
+  ): Promise<SurveyDetail | null> {
+    const summary = await withDatabase(async (sql) => {
+      const rows = (await sql`
+        SELECT
+          surveys.id,
+          surveys.slug,
+          surveys.title,
+          surveys.description,
+          surveys.is_active,
+          surveys.created_at,
+          COUNT(DISTINCT survey_questions.id)::int AS question_count,
+          COUNT(DISTINCT survey_responses.id)::int AS response_count
+        FROM surveys
+        LEFT JOIN survey_questions
+          ON survey_questions.survey_id = surveys.id
+        LEFT JOIN survey_responses
+          ON survey_responses.survey_id = surveys.id
+        WHERE surveys.id = ${surveyId}
+          AND surveys.user_id = ${userId}
+        GROUP BY surveys.id
+        LIMIT 1
+      `) as RecordValue[];
+
+      return rows[0] ? mapSummary(rows[0]) : null;
+    });
+
+    if (!summary) {
+      return null;
+    }
+
+    return {
+      ...summary,
+      questions: await getSurveyQuestions(summary.id),
+    };
+  }
 
 export async function getSurveyForSubmission(surveyId: string): Promise<SurveyDetail | null> {
   const survey = await withDatabase(async (sql) => {
@@ -230,8 +297,8 @@ function buildDistribution(question: SurveyQuestion, answers: RecordValue[]): Qu
   };
 }
 
-export async function getAdminSurveyAnalytics(): Promise<SurveyAnalytics[]> {
-  const summaries = await listSurveySummaries(true);
+export async function getAdminSurveyAnalytics(userId: string): Promise<SurveyAnalytics[]> {
+  const summaries = await listOwnerSurveySummaries(userId);
 
   if (summaries.length === 0) {
     return [];

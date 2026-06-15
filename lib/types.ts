@@ -20,6 +20,12 @@ export interface SurveySummary {
   createdAt: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
 export interface SurveyDetail extends SurveySummary {
   questions: SurveyQuestion[];
 }

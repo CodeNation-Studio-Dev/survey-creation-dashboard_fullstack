@@ -4,8 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import {
+  clearUserSession,
+  createUserSession,
+  loginWithPassword,
+  registerWithPassword,
+  requireUser,
+} from "./auth";
 import { ensureSchema } from "./db";
-import { getSurveyForSubmission } from "./data";
+import { getSurveyByIdForOwner, getSurveyForSubmission } from "./data";
 
 const questionSchema = z
   .object({
@@ -29,6 +36,11 @@ const createSurveySchema = z.object({
   description: z.string().trim().min(12, "Agrega una descripcion breve para los participantes."),
   isActive: z.boolean(),
   questions: z.array(questionSchema).min(1, "Agrega al menos una pregunta."),
+});
+
+const credentialsSchema = z.object({
+  email: z.string().trim().email("Ingresa un correo valido."),
+  password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
 });
 
 function slugify(value: string) {
@@ -68,6 +80,8 @@ function parseQuestionsPayload(formData: FormData) {
 }
 
 export async function createSurveyAction(formData: FormData) {
+  const user = await requireUser();
+
   const parsed = createSurveySchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
@@ -89,8 +103,15 @@ export async function createSurveyAction(formData: FormData) {
   const slug = slugify(parsed.data.title);
 
   await sql`
-    INSERT INTO surveys (id, slug, title, description, is_active)
-    VALUES (${surveyId}, ${slug}, ${parsed.data.title}, ${parsed.data.description}, ${parsed.data.isActive})
+    INSERT INTO surveys (id, user_id, slug, title, description, is_active)
+    VALUES (
+      ${surveyId},
+      ${user.id},
+      ${slug},
+      ${parsed.data.title},
+      ${parsed.data.description},
+      ${parsed.data.isActive}
+    )
   `;
 
   for (const [index, question] of parsed.data.questions.entries()) {
@@ -111,6 +132,155 @@ export async function createSurveyAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   redirect("/admin");
+}
+
+function normalizeQuestionPayload(
+  questions: Array<{
+    prompt: string;
+    type: "single_choice" | "rating" | "text";
+    required: boolean;
+    options?: string[];
+  }>,
+) {
+  return questions.map((question) => ({
+    prompt: question.prompt.trim(),
+    type: question.type,
+    required: question.required,
+    options:
+      question.type === "single_choice"
+        ? (question.options ?? []).map((option) => option.trim()).filter(Boolean)
+        : [],
+  }));
+}
+
+export async function updateSurveyAction(formData: FormData) {
+  const user = await requireUser();
+  const surveyId = formData.get("surveyId");
+
+  if (typeof surveyId !== "string") {
+    throw new Error("Falta informacion de la encuesta.");
+  }
+
+  const parsed = createSurveySchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description"),
+    isActive: formData.get("isActive") === "on",
+    questions: parseQuestionsPayload(formData),
+  });
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "No se pudo actualizar la encuesta.");
+  }
+
+  const existingSurvey = await getSurveyByIdForOwner(surveyId, user.id);
+
+  if (!existingSurvey) {
+    throw new Error("No tienes acceso a esta encuesta.");
+  }
+
+  const sql = await ensureSchema();
+
+  if (!sql) {
+    throw new Error("Configura DATABASE_URL antes de editar encuestas.");
+  }
+
+  const responseRows = (await sql`
+    SELECT COUNT(*)::int AS total
+    FROM survey_responses
+    WHERE survey_id = ${surveyId}
+  `) as Array<Record<string, unknown>>;
+
+  const responseCount = Number(responseRows[0]?.total ?? 0);
+
+  const incomingQuestions = normalizeQuestionPayload(parsed.data.questions);
+  const existingQuestions = normalizeQuestionPayload(existingSurvey.questions);
+  const questionsChanged = JSON.stringify(incomingQuestions) !== JSON.stringify(existingQuestions);
+
+  if (responseCount > 0 && questionsChanged) {
+    throw new Error("No puedes editar las preguntas de una encuesta que ya tiene respuestas.");
+  }
+
+  await sql`
+    UPDATE surveys
+    SET
+      title = ${parsed.data.title},
+      description = ${parsed.data.description},
+      is_active = ${parsed.data.isActive}
+    WHERE id = ${surveyId}
+      AND user_id = ${user.id}
+  `;
+
+  if (responseCount === 0 && questionsChanged) {
+    await sql`
+      DELETE FROM survey_questions
+      WHERE survey_id = ${surveyId}
+    `;
+
+    for (const [index, question] of incomingQuestions.entries()) {
+      await sql`
+        INSERT INTO survey_questions (id, survey_id, prompt, type, required, position, options)
+        VALUES (
+          ${crypto.randomUUID()},
+          ${surveyId},
+          ${question.prompt},
+          ${question.type},
+          ${question.required},
+          ${index},
+          ${JSON.stringify(question.options ?? [])}::jsonb
+        )
+      `;
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath(`/s/${existingSurvey.slug}`);
+  redirect("/admin");
+}
+
+export async function registerAction(formData: FormData) {
+  const parsed = credentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    redirect(`/auth?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Datos invalidos")}`);
+  }
+
+  try {
+    const user = await registerWithPassword(parsed.data.email, parsed.data.password);
+    await createUserSession(user.id);
+    redirect("/admin");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
+    redirect(`/auth?error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function loginAction(formData: FormData) {
+  const parsed = credentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    redirect(`/auth?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Datos invalidos")}`);
+  }
+
+  try {
+    const user = await loginWithPassword(parsed.data.email, parsed.data.password);
+    await createUserSession(user.id);
+    redirect("/admin");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo iniciar sesion.";
+    redirect(`/auth?error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function logoutAction() {
+  await clearUserSession();
+  redirect("/");
 }
 
 export async function submitSurveyResponseAction(formData: FormData) {

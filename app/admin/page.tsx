@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BarChart3, Link2, ShieldCheck, Users } from "lucide-react";
+import { BarChart3, Link2, LogOut, ShieldCheck, Users } from "lucide-react";
 
 import { SurveyBuilder } from "./survey-builder";
-import { createSurveyAction } from "@/lib/actions";
+import { createSurveyAction, logoutAction } from "@/lib/actions";
+import { requireUser } from "@/lib/auth";
 import { getAdminSurveyAnalytics } from "@/lib/data";
 import { hasDatabaseConfig } from "@/lib/db";
 import type { QuestionAnalytics } from "@/lib/types";
@@ -37,6 +38,8 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
     );
   }
 
+  const maxCount = Math.max(...result.distribution.map((entry) => entry.count), 1);
+
   return (
     <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/70 p-5">
       <div className="flex items-center justify-between gap-3">
@@ -45,39 +48,60 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
           {result.totalAnswers} respuestas
         </span>
       </div>
-      <div className="mt-5 space-y-4">
-        {result.distribution.map((entry) => {
-          const percentage = result.totalAnswers === 0 ? 0 : (entry.count / result.totalAnswers) * 100;
+      <div className="mt-6">
+        <div className="flex h-52 items-end gap-3 rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4">
+          {result.distribution.map((entry) => {
+            const percentage = result.totalAnswers === 0 ? 0 : Math.round((entry.count / result.totalAnswers) * 100);
+            const height = Math.max((entry.count / maxCount) * 100, entry.count > 0 ? 10 : 0);
 
-          return (
-            <div key={`${result.questionId}-${entry.label}`} className="space-y-2">
-              <div className="flex items-center justify-between gap-3 text-sm font-medium">
-                <span>{entry.label}</span>
-                <span className="text-[color:rgba(18,33,23,0.62)]">{entry.count}</span>
+            return (
+              <div key={`${result.questionId}-${entry.label}`} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                <span className="text-xs font-semibold text-[color:rgba(18,33,23,0.68)]">{entry.count}</span>
+                <div className="flex h-32 w-full items-end justify-center">
+                  <div
+                    className="w-full max-w-12 rounded-t-xl bg-[linear-gradient(180deg,var(--accent),var(--accent-cool))]"
+                    style={{ height: `${height}%` }}
+                    title={`${entry.label}: ${entry.count} (${percentage}%)`}
+                  />
+                </div>
+                <span className="line-clamp-2 text-center text-xs font-medium text-[color:rgba(18,33,23,0.72)]">
+                  {entry.label}
+                </span>
+                <span className="text-[11px] text-[color:rgba(18,33,23,0.58)]">{percentage}%</span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-[rgba(18,33,23,0.08)]">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-cool))]"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
 export default async function AdminPage() {
+  const user = await requireUser();
+
   const [surveys, databaseConfigured] = await Promise.all([
-    getAdminSurveyAnalytics(),
+    getAdminSurveyAnalytics(user.id),
     Promise.resolve(hasDatabaseConfig()),
   ]);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 md:px-8 md:py-10">
       <section className="hero-grid glass-panel overflow-hidden rounded-[2.4rem] border border-[var(--line)] px-6 py-8 md:px-10 md:py-12">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-medium text-[color:rgba(18,33,23,0.72)]">
+            Sesion activa: {user.email}
+          </p>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/65 px-4 py-2 text-sm font-medium"
+            >
+              <LogOut className="size-4" />
+              Cerrar sesion
+            </button>
+          </form>
+        </div>
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div className="space-y-5">
             <span className="pill inline-flex w-fit rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-deep)]">
@@ -175,6 +199,12 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
                     <Link href={`/s/${survey.slug}`} className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
                       <Link2 className="size-4" />
                       /s/{survey.slug}
+                    </Link>
+                    <Link
+                      href={`/admin/encuestas/${survey.id}`}
+                      className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]"
+                    >
+                      Editar encuesta
                     </Link>
                   </div>
                 </div>

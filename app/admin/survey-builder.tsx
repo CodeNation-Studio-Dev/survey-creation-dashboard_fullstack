@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import type { QuestionType, SurveyDraftQuestion } from "@/lib/types";
 
-function SubmitButton() {
+function SubmitButton({ submitLabel }: { submitLabel: string }) {
   const { pending } = useFormStatus();
 
   return (
@@ -15,7 +15,7 @@ function SubmitButton() {
       disabled={pending}
       className="inline-flex items-center justify-center rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Publicando encuesta..." : "Publicar encuesta"}
+      {pending ? "Guardando cambios..." : submitLabel}
     </button>
   );
 }
@@ -52,11 +52,29 @@ const initialQuestions: Array<SurveyDraftQuestion & { id: string }> = [
 
 export function SurveyBuilder({
   action,
+  initial,
+  surveyId,
+  submitLabel,
 }: {
   action: (formData: FormData) => Promise<void>;
+  initial?: {
+    title: string;
+    description: string;
+    isActive: boolean;
+    questions: Array<SurveyDraftQuestion & { id?: string }>;
+  };
+  surveyId?: string;
+  submitLabel?: string;
 }) {
-  const [questions, setQuestions] = useState(initialQuestions);
-  const [nextId, setNextId] = useState(4);
+  const seedQuestions =
+    initial?.questions.map((question, index) => ({
+      ...question,
+      id: question.id ?? `question-${index + 1}`,
+      options: question.options ?? [],
+    })) ?? initialQuestions;
+
+  const [questions, setQuestions] = useState(seedQuestions);
+  const [nextId, setNextId] = useState(seedQuestions.length + 1);
 
   const payload = JSON.stringify(
     questions.map((question) => ({
@@ -84,7 +102,7 @@ export function SurveyBuilder({
         prompt: "",
         type,
         required: true,
-        options: type === "single_choice" ? ["Option A", "Option B"] : [],
+        options: type === "single_choice" ? ["Opcion A", "Opcion B"] : [],
       },
     ]);
     setNextId((current) => current + 1);
@@ -92,6 +110,7 @@ export function SurveyBuilder({
 
   return (
     <form action={action} className="glass-panel rounded-[2rem] p-6 md:p-8">
+      {surveyId ? <input type="hidden" name="surveyId" value={surveyId} /> : null}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
           <span className="pill inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent-deep)]">
@@ -136,7 +155,14 @@ export function SurveyBuilder({
       <div className="mt-8 grid gap-5 md:grid-cols-[1.1fr_0.9fr]">
         <label className="space-y-2">
           <span className="text-sm font-semibold">Titulo de la encuesta</span>
-          <input name="title" className="field" placeholder="Pulso trimestral del producto" required minLength={3} />
+          <input
+            name="title"
+            className="field"
+            placeholder="Pulso trimestral del producto"
+            defaultValue={initial?.title ?? ""}
+            required
+            minLength={3}
+          />
         </label>
         <label className="space-y-2">
           <span className="text-sm font-semibold">Publicacion</span>
@@ -145,7 +171,12 @@ export function SurveyBuilder({
               <span className="block text-sm font-semibold">Aceptar respuestas anonimas</span>
               <span className="block text-xs text-[color:rgba(18,33,23,0.6)]">Desactiva esto para dejar la encuesta como borrador.</span>
             </span>
-            <input name="isActive" type="checkbox" defaultChecked className="size-5 accent-[var(--accent)]" />
+            <input
+              name="isActive"
+              type="checkbox"
+              defaultChecked={initial?.isActive ?? true}
+              className="size-5 accent-[var(--accent)]"
+            />
           </span>
         </label>
       </div>
@@ -156,6 +187,7 @@ export function SurveyBuilder({
           name="description"
           className="field min-h-28"
           placeholder="Explica por que recopilas respuestas y cuanto tiempo toma la encuesta."
+          defaultValue={initial?.description ?? ""}
           required
           minLength={12}
         />
@@ -257,7 +289,7 @@ export function SurveyBuilder({
         <p className="max-w-xl text-sm leading-7 text-[color:rgba(18,33,23,0.68)]">
           Los enlaces son anonimos por defecto. Comparte la URL desde el panel y las personas podran responder sin autenticarse.
         </p>
-        <SubmitButton />
+        <SubmitButton submitLabel={submitLabel ?? "Publicar encuesta"} />
       </div>
     </form>
   );
