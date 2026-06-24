@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -75,6 +75,8 @@ export function SurveyBuilder({
 
   const [questions, setQuestions] = useState(seedQuestions);
   const [nextId, setNextId] = useState(seedQuestions.length + 1);
+  const [draggingQuestionId, setDraggingQuestionId] = useState<string | null>(null);
+  const [dragOverQuestionId, setDragOverQuestionId] = useState<string | null>(null);
 
   const payload = JSON.stringify(
     questions.map((question) => ({
@@ -106,6 +108,48 @@ export function SurveyBuilder({
       },
     ]);
     setNextId((current) => current + 1);
+  }
+
+  function moveQuestionBefore(targetId: string) {
+    if (!draggingQuestionId || draggingQuestionId === targetId) {
+      return;
+    }
+
+    setQuestions((current) => {
+      const fromIndex = current.findIndex((question) => question.id === draggingQuestionId);
+      const toIndex = current.findIndex((question) => question.id === targetId);
+
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+        return current;
+      }
+
+      const next = [...current];
+      const [movedQuestion] = next.splice(fromIndex, 1);
+      const adjustedToIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+      next.splice(adjustedToIndex, 0, movedQuestion);
+
+      return next;
+    });
+  }
+
+  function moveQuestionToEnd() {
+    if (!draggingQuestionId) {
+      return;
+    }
+
+    setQuestions((current) => {
+      const fromIndex = current.findIndex((question) => question.id === draggingQuestionId);
+
+      if (fromIndex === -1 || fromIndex === current.length - 1) {
+        return current;
+      }
+
+      const next = [...current];
+      const [movedQuestion] = next.splice(fromIndex, 1);
+      next.push(movedQuestion);
+
+      return next;
+    });
   }
 
   return (
@@ -195,9 +239,50 @@ export function SurveyBuilder({
 
       <input type="hidden" name="questionsPayload" value={payload} readOnly />
 
-      <div className="mt-8 space-y-4">
+      <div
+        className="mt-8 space-y-4"
+        onDragOver={(event) => {
+          event.preventDefault();
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          moveQuestionToEnd();
+          setDraggingQuestionId(null);
+          setDragOverQuestionId(null);
+        }}
+      >
         {questions.map((question, index) => (
-          <section key={question.id} className="rounded-[1.75rem] border border-[var(--line)] bg-white/68 p-5 shadow-[0_18px_48px_rgba(72,49,21,0.06)]">
+          <section
+            key={question.id}
+            className={`rounded-[1.75rem] border bg-white/68 p-5 shadow-[0_18px_48px_rgba(72,49,21,0.06)] transition-colors ${
+              dragOverQuestionId === question.id && draggingQuestionId !== question.id
+                ? "border-[var(--accent-cool)] bg-[color:rgba(93,154,139,0.12)]"
+                : "border-[var(--line)]"
+            }`}
+            onDragEnter={() => {
+              if (draggingQuestionId && draggingQuestionId !== question.id) {
+                setDragOverQuestionId(question.id);
+              }
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (draggingQuestionId && draggingQuestionId !== question.id) {
+                setDragOverQuestionId(question.id);
+              }
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setDragOverQuestionId((current) => (current === question.id ? null : current));
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              moveQuestionBefore(question.id);
+              setDraggingQuestionId(null);
+              setDragOverQuestionId(null);
+            }}
+          >
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-cool)]">
@@ -207,16 +292,36 @@ export function SurveyBuilder({
                   Elige el tipo de entrada y si la respuesta sera obligatoria.
                 </p>
               </div>
-              {questions.length > 1 ? (
+              <div className="flex items-center gap-2 self-start">
                 <button
                   type="button"
-                  onClick={() => setQuestions((current) => current.filter((item) => item.id !== question.id))}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-medium text-[var(--accent-deep)]"
+                  draggable
+                  onDragStart={(event) => {
+                    setDraggingQuestionId(question.id);
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", question.id);
+                  }}
+                  onDragEnd={() => {
+                    setDraggingQuestionId(null);
+                    setDragOverQuestionId(null);
+                  }}
+                  title="Arrastra para reordenar"
+                  aria-label="Arrastrar pregunta para reordenar"
+                  className="inline-flex cursor-grab items-center justify-center rounded-full border border-[var(--line)] bg-white/75 p-2 text-[var(--accent-deep)] active:cursor-grabbing"
                 >
-                  <Trash2 className="size-4" />
-                  Eliminar
+                  <GripVertical className="size-4" />
                 </button>
-              ) : null}
+                {questions.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuestions((current) => current.filter((item) => item.id !== question.id))}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-medium text-[var(--accent-deep)]"
+                  >
+                    <Trash2 className="size-4" />
+                    Eliminar
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-[1.5fr_0.6fr_0.6fr]">
