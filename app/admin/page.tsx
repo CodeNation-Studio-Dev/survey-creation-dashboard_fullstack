@@ -15,19 +15,19 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
     return (
       <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/70 p-5">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="text-lg font-semibold line-clamp-2">{result.prompt}</h4>
-          <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] whitespace-nowrap">
-            {result.totalAnswers} respuestas
+          <h4 className="text-lg font-semibold">{result.prompt}</h4>
+          <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+            {result.totalAnswers} respuestas de texto
           </span>
         </div>
-        <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">
+        <div className="mt-4 grid gap-3">
           {result.textAnswers.length > 0 ? (
-            result.textAnswers.slice(0, 5).map((answer, idx) => (
+            result.textAnswers.slice(0, 5).map((answer) => (
               <blockquote
-                key={`${result.questionId}-${idx}`}
-                className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-3 text-sm leading-6 text-[color:rgba(18,33,23,0.78)] break-words"
+                key={`${result.questionId}-${answer}`}
+                className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-3 text-sm leading-7 text-[color:rgba(18,33,23,0.78)]"
               >
-                "{answer.substring(0, 150)}{answer.length > 150 ? "..." : ""}"
+                "{answer}"
               </blockquote>
             ))
           ) : (
@@ -43,19 +43,19 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
   return (
     <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/70 p-5">
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-lg font-semibold line-clamp-2">{result.prompt}</h4>
-        <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] whitespace-nowrap">
+        <h4 className="text-lg font-semibold">{result.prompt}</h4>
+        <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
           {result.totalAnswers} respuestas
         </span>
       </div>
-      <div className="mt-6 overflow-x-auto">
-        <div className="flex h-52 min-w-full items-end gap-3 rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4">
+      <div className="mt-6">
+        <div className="flex h-52 items-end gap-3 rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4">
           {result.distribution.map((entry) => {
             const percentage = result.totalAnswers === 0 ? 0 : Math.round((entry.count / result.totalAnswers) * 100);
             const height = Math.max((entry.count / maxCount) * 100, entry.count > 0 ? 10 : 0);
 
             return (
-              <div key={`${result.questionId}-${entry.label}`} className="flex min-w-[80px] flex-col items-center gap-2">
+              <div key={`${result.questionId}-${entry.label}`} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                 <span className="text-xs font-semibold text-[color:rgba(18,33,23,0.68)]">{entry.count}</span>
                 <div className="flex h-32 w-full items-end justify-center">
                   <div
@@ -64,7 +64,7 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
                     title={`${entry.label}: ${entry.count} (${percentage}%)`}
                   />
                 </div>
-                <span className="line-clamp-2 text-center text-xs font-medium text-[color:rgba(18,33,23,0.72)] break-words">
+                <span className="line-clamp-2 text-center text-xs font-medium text-[color:rgba(18,33,23,0.72)]">
                   {entry.label}
                 </span>
                 <span className="text-[11px] text-[color:rgba(18,33,23,0.58)]">{percentage}%</span>
@@ -272,7 +272,7 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid gap-4 grid-cols-2">
                 {survey.results.map((result) => (
                   <ResultCard key={result.questionId} result={result} />
                 ))}
