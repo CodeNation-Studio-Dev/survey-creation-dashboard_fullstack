@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { BarChart3, Link2, LogOut, ShieldCheck, Users, LayoutGrid, Table2 } from "lucide-react";
-import { useState } from "react";
+import { BarChart3, Link2, LogOut, ShieldCheck, Users } from "lucide-react";
 
 import { SurveyBuilder } from "./survey-builder";
 import { createSurveyAction, logoutAction, resetPasswordAction } from "@/lib/actions";
@@ -80,80 +77,6 @@ function ResultCard({ result }: { result: QuestionAnalytics }) {
   );
 }
 
-function TableResultView({ results }: { results: QuestionAnalytics[] }) {
-  return (
-    <div className="space-y-6">
-      {results.map((result) => (
-        <div key={result.questionId} className="rounded-[1.5rem] border border-[var(--line)] bg-white/70 p-6 overflow-x-auto">
-          <div className="mb-4">
-            <h4 className="text-lg font-semibold text-[color:rgba(18,33,23,0.88)]">{result.prompt}</h4>
-            <p className="mt-1 text-xs text-[color:rgba(18,33,23,0.6)] uppercase tracking-[0.1em]">
-              {result.type === "text" ? "Respuestas abiertas" : result.type === "rating" ? "Calificacion 1-5" : "Opciones multiples"}
-            </p>
-          </div>
-
-          {result.type === "text" ? (
-            <div className="space-y-3">
-              <div className="text-sm text-[color:rgba(18,33,23,0.72)] font-medium mb-3">
-                Total: {result.totalAnswers} respuestas
-              </div>
-              {result.textAnswers.length > 0 ? (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {result.textAnswers.map((answer, idx) => (
-                    <div
-                      key={`${result.questionId}-${idx}`}
-                      className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4 text-sm leading-6 text-[color:rgba(18,33,23,0.78)]"
-                    >
-                      {answer}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[color:rgba(18,33,23,0.64)]">No hay respuestas registradas.</p>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[300px] text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--line)]">
-                    <th className="px-4 py-3 text-left font-semibold text-[color:rgba(18,33,23,0.8)]">Opcion</th>
-                    <th className="px-4 py-3 text-center font-semibold text-[color:rgba(18,33,23,0.8)]">Votos</th>
-                    <th className="px-4 py-3 text-center font-semibold text-[color:rgba(18,33,23,0.8)]">Porcentaje</th>
-                    <th className="px-4 py-3 text-right font-semibold text-[color:rgba(18,33,23,0.8)]">Barra</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.distribution.map((entry) => {
-                    const percentage = result.totalAnswers === 0 ? 0 : Math.round((entry.count / result.totalAnswers) * 100);
-                    return (
-                      <tr key={`${result.questionId}-${entry.label}`} className="border-b border-[var(--line)] hover:bg-[var(--surface-strong)]">
-                        <td className="px-4 py-3 text-[color:rgba(18,33,23,0.78)]">{entry.label}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-[color:rgba(18,33,23,0.8)]">{entry.count}</td>
-                        <td className="px-4 py-3 text-center text-[color:rgba(18,33,23,0.72)]">{percentage}%</td>
-                        <td className="px-4 py-3">
-                          <div className="flex h-6 items-center justify-end gap-2">
-                            <div className="h-2 w-24 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] overflow-hidden">
-                              <div
-                                className="h-full bg-[linear-gradient(90deg,var(--accent),var(--accent-cool))]"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default async function AdminPage({
   searchParams,
 }: {
@@ -166,24 +89,6 @@ export default async function AdminPage({
     getAdminSurveyAnalytics(user.id),
     Promise.resolve(hasDatabaseConfig()),
   ]);
-
-  return (
-    <AdminContent user={user} surveys={surveys} params={params} databaseConfigured={databaseConfigured} />
-  );
-}
-
-function AdminContent({
-  user,
-  surveys,
-  params,
-  databaseConfigured,
-}: {
-  user: { id: string; email: string; createdAt: string };
-  surveys: any[];
-  params: { passwordError?: string; passwordUpdated?: string };
-  databaseConfigured: boolean;
-}) {
-  const [resultsView, setResultsView] = useState<Record<string, "graphics" | "table">>({});
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 md:px-8 md:py-10">
@@ -328,90 +233,52 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
             </p>
           </div>
         ) : (
-          surveys.map((survey) => {
-            const viewMode = resultsView[survey.id] || "graphics";
-            return (
-              <article key={survey.id} className="glass-panel rounded-[2rem] p-6 md:p-8">
-                <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="display-font text-3xl font-semibold tracking-tight">{survey.title}</h3>
-                      <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                        {survey.isActive ? "Activa" : "Borrador"}
-                      </span>
-                    </div>
-                    <p className="max-w-3xl text-sm leading-7 text-[color:rgba(18,33,23,0.7)] md:text-base">
-                      {survey.description}
-                    </p>
+          surveys.map((survey) => (
+            <article key={survey.id} className="glass-panel rounded-[2rem] p-6 md:p-8">
+              <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="display-font text-3xl font-semibold tracking-tight">{survey.title}</h3>
+                    <span className="pill rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+                      {survey.isActive ? "Activa" : "Borrador"}
+                    </span>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3 md:min-w-[330px]">
-                    <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-deep)]">Preguntas</p>
-                      <p className="mt-2 text-2xl font-semibold">{survey.questionCount}</p>
-                    </div>
-                    <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-cool)]">Respuestas</p>
-                      <p className="mt-2 text-2xl font-semibold">{survey.responseCount}</p>
-                    </div>
-                    <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)]">Compartir</p>
-                      <Link href={`/s/${survey.slug}`} className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
-                        <Link2 className="size-4" />
-                        /s/{survey.slug}
-                      </Link>
-                      <Link
-                        href={`/admin/encuestas/${survey.id}`}
-                        className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]"
-                      >
-                        Editar encuesta
-                      </Link>
-                    </div>
+                  <p className="max-w-3xl text-sm leading-7 text-[color:rgba(18,33,23,0.7)] md:text-base">
+                    {survey.description}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3 md:min-w-[330px]">
+                  <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-deep)]">Preguntas</p>
+                    <p className="mt-2 text-2xl font-semibold">{survey.questionCount}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-cool)]">Respuestas</p>
+                    <p className="mt-2 text-2xl font-semibold">{survey.responseCount}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-[var(--line)] bg-white/62 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)]">Compartir</p>
+                    <Link href={`/s/${survey.slug}`} className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+                      <Link2 className="size-4" />
+                      /s/{survey.slug}
+                    </Link>
+                    <Link
+                      href={`/admin/encuestas/${survey.id}`}
+                      className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]"
+                    >
+                      Editar encuesta
+                    </Link>
                   </div>
                 </div>
+              </div>
 
-                {survey.results.length > 0 ? (
-                  <>
-                    <div className="mt-6 flex items-center gap-2">
-                      <button
-                        onClick={() => setResultsView((prev) => ({ ...prev, [survey.id]: "graphics" }))}
-                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                          viewMode === "graphics"
-                            ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
-                            : "border border-[var(--line)] bg-white/60 text-[color:rgba(18,33,23,0.72)]"
-                        }`}
-                      >
-                        <LayoutGrid className="size-4" />
-                        Vista grafica
-                      </button>
-                      <button
-                        onClick={() => setResultsView((prev) => ({ ...prev, [survey.id]: "table" }))}
-                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                          viewMode === "table"
-                            ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
-                            : "border border-[var(--line)] bg-white/60 text-[color:rgba(18,33,23,0.72)]"
-                        }`}
-                      >
-                        <Table2 className="size-4" />
-                        Vista tabla
-                      </button>
-                    </div>
-
-                    <div className="mt-6">
-                      {viewMode === "graphics" ? (
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                          {survey.results.map((result) => (
-                            <ResultCard key={result.questionId} result={result} />
-                          ))}
-                        </div>
-                      ) : (
-                        <TableResultView results={survey.results} />
-                      )}
-                    </div>
-                  </>
-                ) : null}
-              </article>
-            );
-          })
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {survey.results.map((result) => (
+                  <ResultCard key={result.questionId} result={result} />
+                ))}
+              </div>
+            </article>
+          ))
         )}
       </section>
     </main>
