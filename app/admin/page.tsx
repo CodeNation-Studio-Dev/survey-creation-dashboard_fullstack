@@ -6,7 +6,8 @@ import { createSurveyAction, logoutAction, resetPasswordAction } from "@/lib/act
 import { requireUser } from "@/lib/auth";
 import { getAdminSurveyAnalytics } from "@/lib/data";
 import { hasDatabaseConfig } from "@/lib/db";
-import type { QuestionAnalytics } from "@/lib/types";
+import type { QuestionAnalytics, SurveyAnalytics } from "@/lib/types";
+import { SurveyReportButton } from "./survey-report-button";
 
 export const dynamic = "force-dynamic";
 
@@ -272,7 +273,14 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 grid-cols-2">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[color:rgba(18,33,23,0.68)]">
+                  Exporta un reporte PDF con el resumen y las respuestas de esta encuesta.
+                </p>
+                <SurveyReportButton survey={survey as SurveyAnalytics} />
+              </div>
+
+              <div className="mt-6 grid gap-4 grid-cols-1 md:grid-cols-2">
                 {survey.results.map((result) => (
                   <ResultCard key={result.questionId} result={result} />
                 ))}
