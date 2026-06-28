@@ -142,18 +142,30 @@ export async function ensureSchema() {
     })();
   }
 
-  await schemaReadyPromise;
+  try {
+    await schemaReadyPromise;
+  } catch (error) {
+    // Allow a future request to retry schema bootstrap after transient failures.
+    schemaReadyPromise = null;
+    throw error;
+  }
+
   return sql;
 }
 
 export async function withDatabase<T>(
   work: (sql: NonNullable<ReturnType<typeof getSql>>) => Promise<T>,
 ) {
-  const sql = await ensureSchema();
+  try {
+    const sql = await ensureSchema();
 
-  if (!sql) {
+    if (!sql) {
+      return null;
+    }
+
+    return await work(sql);
+  } catch (error) {
+    console.error("Database operation failed", error);
     return null;
   }
-
-  return work(sql);
 }
